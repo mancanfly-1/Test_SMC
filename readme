@@ -1,0 +1,24 @@
+1. port->pending_list中只保存server channel
+
+2. port在没有create之前是否可以定义为startup_port,目前从接口上来看并没有限制。
+
+3. startup_ports没有发现对该列表的回收机制。
+
+4.raise ValueError("Can not ite object of type {!r}".format(type(a)))
+ValueError: Can not ite object of type <type 'int'>
+
+new.channels[chan_id].ref_count = z3.BitVecVal(0,32) # before 0
+
+5.self.assertEquals(model, []); ....!= []
+starting test_chan_init....
+If(Not(Extract(63, 5, uuid.0) | Extract(63, 5, chan_id.1) ==
+       0),
+   4294967295,
+   1)
+返回值：return NO_ERROR;NO_ERROR是1，必须是 0
+If(Not(Extract(63, 5, uuid.0) | Extract(63, 5, chan_id.1) ==
+       0),
+   4294967295,
+   0)
+
+6.都哪里的数据类型要注意, main.py、TIPC.c datatypes.py、sepcs.py
