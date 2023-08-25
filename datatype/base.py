@@ -162,7 +162,7 @@ class Struct(object):
             print(v)
             if isinstance(v, type):
                 self._structs[k] = v()
-                self._structs[k]._init(self, k)     # 递归调用本身的_init方法，
+                self._structs[k]._init(self, k)     # invoke _init function recursively 
             else:
                 v._init(self, k, prefix=name)
         # assignment again?

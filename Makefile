@@ -15,7 +15,7 @@ MKDIR_P		:= mkdir -p
 KERNEL_CFLAGS = $(CFLAGS) -DNR_CPUS=$(NR_CPUS) -fwrapv -I include
 
 LLS		:=		\
-		$(O)/TIPC.ll	\
+		$(O)/scm.ll	\
 
 # generate .ll from .c
 $(O)/%.ll: %.c
@@ -31,11 +31,13 @@ $(O)/%.py: $(O)/%.ll
 	./irpy "$<" > "$@"
 	@echo 'convert .ll --> $@ done!'
 	
-all: $(LLS) $(O)/TIPC.py
+all: $(LLS) $(O)/scm.py
 	cp ./main.py ./specs.py ./irpy ./$(O)
 	cp ./datatype -rf ./$(O)
 	cp ./libirpy -rf ./$(O) 
 	cp ./invariants.py ./$(O)
+	cp ./head.py ./$(O)
+	cp ./equiv.py ./$(O)
 	@echo 'copy files to build dir done!'
 
 verify:

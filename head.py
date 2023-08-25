@@ -40,7 +40,7 @@ SCMI_PROTO_ATTR_MSG = z3.BitVecVal(1, uint32_t)
 SCMI_PROTO_MSG_ATTR_MSG = z3.BitVecVal(2, uint32_t)
 
 SCMI_PWR_STATE_SET_MSG = z3.BitVecVal(4, uint32_t)
-SCMI_PWR_STATE_GET_MSG == z3.BitVecVal(5, uint32_t)
+SCMI_PWR_STATE_GET_MSG = z3.BitVecVal(5, uint32_t)
 
 SCMI_SYS_PWR_STATE_SET_MSG = z3.BitVecVal(3, uint32_t)
 SCMI_SYS_PWR_STATE_GET_MSG = z3.BitVecVal(4, uint32_t)

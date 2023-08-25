@@ -11,12 +11,13 @@ import libirpy.ex as ex
 import libirpy.itypes as itypes
 from libirpy.datatypes import BitcastPointer
 
-import TIPC
+import scm
 
 #import syscall_spec
 import datatype.datatypes as dt
 import z3
 import specs as spec
+import equiv as eq
 import invariants as inv
 Solver = solver.Solver
 INTERACTIVE = False
@@ -69,8 +70,8 @@ def newctx():
     # If we don't need the values of any constants we don't have to
     # initialize them, slightly faster execution time.
     ctx.eval.declare_global_constant = ctx.eval.declare_global_variable
-    libirpy.initctx(ctx, TIPC)
-    ctx.ptr_to_int[ctx.globals['@port_table']._ref._name] = util.FreshBitVec( '(uintptr)@port_table', 64)
+    libirpy.initctx(ctx, scm)
+    # ctx.ptr_to_int[ctx.globals['@port_table']._ref._name] = util.FreshBitVec( '(uintptr)@port_table', 64)
     return ctx
 
 class DetailTest(BaseTest):
@@ -83,7 +84,7 @@ class DetailTest(BaseTest):
         self.solver = Solver()
         self.solver.set(AUTO_CONFIG=False)
 		# current ctx state and machine state is equal?		
-        self._pre_state = spec.state_equiv(self.ctx, self.state)
+        self._pre_state = eq.state_equiv(self.ctx, self.state)
 
 		# we should add our invariants to context.
 		#self.ctx.add_assumption(inv.impl_invariants_py(self.ctx))
@@ -107,12 +108,14 @@ class DetailTest(BaseTest):
                             pre=z3.And(self._pre_state, z3.BoolVal(True)),
                             return_model=INTERACTIVE)
 
-    def test_chan_init(self):
-        chan_id = util.FreshBitVec('chan_id',dt.uint64_t)
-        flags = util.FreshBitVec('flags',dt.uint64_t)
+    def test_css_scp_off(self):
+        psci_power_state_ARM_PWR_LVL0 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL0',dt.uint8_t)
+        psci_power_state_ARM_PWR_LVL1 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL1',dt.uint8_t)
+        psci_power_state_ARM_PWR_LVL2 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL2',dt.uint8_t)
+        core_pos = util.FreshBitVec('core_pos',dt.uint32_t)
         uuid =util.FreshBitVec('uuid',dt.uint64_t)
-        args = (chan_id, flags, uuid)
-        self._general_test('chan_init', *args)
+        args = (psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL1, psci_power_state_ARM_PWR_LVL2,core_pos)
+        self._general_test('css_scp_off', *args)
 
 if __name__ == "__main__":
 	#t = child()

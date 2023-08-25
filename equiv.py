@@ -26,7 +26,16 @@ def mailbox_mem_equiv(conj,ctx, SCMstate):
     mailbox_mem_field_equiv(conj,scmi_mbx_mem_id,ctx,SCMstate,'flags')
     mailbox_mem_field_equiv(conj,scmi_mbx_mem_id,ctx,SCMstate,'len')
     mailbox_mem_field_equiv(conj,scmi_mbx_mem_id,ctx,SCMstate,'msg_header')
-    mailbox_mem_field_equiv(conj,scmi_mbx_mem_id,ctx,SCMstate,'payload')
+    # mailbox_mem_field_equiv(conj,scmi_mbx_mem_id,ctx,SCMstate,'payload')
+    scmi_mbx_mem_n = util.FreshBitVec('scmi_mbx_mem_n', dt.uint32_t)
+    idx = util.FreshBitVec('payload_index', 32)
+    conj.append(z3.ForAll([scmi_mbx_mem_n, idx], z3.Implies(
+        z3.And(
+            z3.ULT(scmi_mbx_mem_n, 16),
+            z3.ULT(idx, 3)),
+        util.global_field_element(ctx, '@mailbox_mem_table','payload',scmi_mbx_mem_n, idx) ==
+        SCMstate.mailbox_mems[scmi_mbx_mem_n].payload(idx))))
+
 
 def channel_equiv(conj, ctx, SCMstate):
     chan_id = util.FreshBitVec('chan_id', dt.chan_id)
@@ -34,7 +43,11 @@ def channel_equiv(conj, ctx, SCMstate):
     channel_field_equiv(conj,chan_id,ctx,SCMstate,'db_reg_addr')
     channel_field_equiv(conj,chan_id,ctx,SCMstate,'db_preserve_mask')
     channel_field_equiv(conj,chan_id,ctx,SCMstate,'db_modify_mask')
-    channel_field_equiv(conj,chan_id,ctx,SCMstate,'is_initialized')
+
+    conj.append(z3.ForAll([chan_id], z3.Implies(is_channel_valid(chan_id),
+        (util.global_field_element(ctx, '@scmi_channels', 'is_initialized', chan_id) != 0) ==
+        SCMstate.channels[chan_id].is_initialized)))
+
 
 def is_core_pos_valid(core_pos_id):
     return z3.And(core_pos_id >= 0, core_pos_id < z3.BitVecVal(8,32))
@@ -46,7 +59,7 @@ def state_equiv(ctx, state):
     channel_equiv(conj,ctx, state)
 
     core_pos = util.FreshBitVec('core_pos_id', z3.BitVecSort(32))
-    # 这里不一定正确，不确定是否需要编写等价函数
+    
     conj.append(z3.ForAll([core_pos],z3.Implies(is_core_pos_valid(core_pos),
     util.global_to_uf_dict(ctx, '@plat_css_core_pos_to_scmi_dmn_id_map')[()](util.i32(0), z3.ZeroExt(32 - core_pos.size(), core_pos)) ==
         state.plat_css_core_pos_to_scmi_dmn_id_map_table[core_pos]))

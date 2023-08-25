@@ -10,8 +10,8 @@ from base import BaseStruct, Struct, Map, Refcnt, Refcnt2
 def _populate_enums():
     module = sys.modules[__name__]
     ctx = libirpy.newctx()
-    import TIPC
-    TIPC._init_metadata(ctx)
+    import scm
+    scm._init_metadata(ctx)
     for k, v in ctx.metadata.items():
         if isinstance(v, tuple) and v[0] == 'DICompositeType':
             if v[1].get('tag') == 'DW_TAG_enumeration_type':
@@ -101,7 +101,7 @@ class Mailbox_mem(Struct):
     flags = Map(uint32_t, uint32_t)
     len = Map(uint32_t, uint32_t)
     msg_header = Map(uint32_t, uint32_t)
-    payload = Map(uint32_t, uint32_t)
+    payload = Map(uint32_t, uint32_t,uint32_t)
 
 class Scmi_channel(Struct):
     scmi_mbx_mem_id = Map(uint32_t,uint32_t)

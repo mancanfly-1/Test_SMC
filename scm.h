@@ -220,7 +220,7 @@ typedef struct scmi_channel {
 	/* SCMI mailbox memory */
 	uint32_t scmi_mbx_mem_id;
 	/* The door bell register address */
-	uintptr_t db_reg_addr;
+	uint64_t db_reg_addr;
 	/* The bit mask that need to be preserved when ringing doorbell */
 	uint32_t db_preserve_mask;
 	/* The bit mask that need to be set to ring doorbell */

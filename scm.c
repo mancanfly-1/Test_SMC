@@ -263,12 +263,13 @@ int set_pwr_state_off(uint32_t scmi_pwr_state, unsigned int core_pos)
 	}
 	// get channel 
 	scmi_channel_t *ch = &scmi_channels[channel_id];
-	if(!ch->is_initialized || ch->scmi_mbx_mem_id > 16)
+	if(!ch->is_initialized || ch->scmi_mbx_mem_id > 15)
 	{
 		return -1;
 	}
 	mailbox_mem_t *mbx_mem = &mailbox_mem_table[ch->scmi_mbx_mem_id];
 	// 去除了对锁的操作
+	// scmi_get_channel(scmi_channel_t *ch)
 	if(SCMI_IS_CHANNEL_FREE(mbx_mem->status))
 	{
 		return -1;
@@ -300,7 +301,100 @@ int set_pwr_state_off(uint32_t scmi_pwr_state, unsigned int core_pos)
 	return 0; 
 }
 
+int css_scp_off(plat_local_state_t psci_power_state_ARM_PWR_LVL0, plat_local_state_t psci_power_state_ARM_PWR_LVL1,plat_local_state_t psci_power_state_ARM_PWR_LVL2,uint32_t core_pos)
+{
+	uint32_t scmi_pwr_state = 0;
+	unsigned int channel_id;
+	unsigned int domain_id;
+	uint32_t pwr_state_set_msg_flag = SCMI_PWR_STATE_SET_FLAG_ASYNC;
 
+	// 与下面的for语句进行呼应
+	if(psci_power_state_ARM_PWR_LVL0 == ARM_LOCAL_STATE_OFF || psci_power_state_ARM_PWR_LVL1 == ARM_LOCAL_STATE_OFF ||
+	psci_power_state_ARM_PWR_LVL2 == ARM_LOCAL_STATE_OFF)
+	{
+		return -1;
+	}
+
+	if(core_pos >=16)
+	{
+		return -1;
+	}
+	channel_id = get_scmi_channel_id(core_pos);
+	domain_id = get_scmi_domain_id(core_pos);
+	if(channel_id !=0 || domain_id != 0)
+	{
+		return -1;
+	}
+	// get channel 
+	scmi_channel_t *ch = &scmi_channels[channel_id];
+	if(!ch->is_initialized || ch->scmi_mbx_mem_id > 15)
+	{
+		return -1;
+	}
+	mailbox_mem_t *mbx_mem = &mailbox_mem_table[ch->scmi_mbx_mem_id];
+	// 去除了对锁的操作
+	// scmi_get_channel(scmi_channel_t *ch)
+	if(SCMI_IS_CHANNEL_FREE(mbx_mem->status))
+	{
+		return -1;
+	}
+
+	/* PSCI power state是否还有其他的state? */
+	if(psci_power_state_ARM_PWR_LVL0 != ARM_LOCAL_STATE_RUN &&
+		psci_power_state_ARM_PWR_LVL1 != ARM_LOCAL_STATE_RUN &&
+		psci_power_state_ARM_PWR_LVL2 != ARM_LOCAL_STATE_RUN)
+	{
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 0,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 1,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 2,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_MAX_PWR_LVL(scmi_pwr_state, 2);
+	}
+
+	if(psci_power_state_ARM_PWR_LVL0 != ARM_LOCAL_STATE_RUN &&
+		psci_power_state_ARM_PWR_LVL1 == ARM_LOCAL_STATE_RUN)
+	{
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 0,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_MAX_PWR_LVL(scmi_pwr_state, 0);
+	}
+
+	if(psci_power_state_ARM_PWR_LVL0 != ARM_LOCAL_STATE_RUN &&
+		psci_power_state_ARM_PWR_LVL1 != ARM_LOCAL_STATE_RUN &&
+		psci_power_state_ARM_PWR_LVL2 == ARM_LOCAL_STATE_RUN)
+	{
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 0,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_LVL(scmi_pwr_state, 1,
+			scmi_power_state_off);
+		SCMI_SET_PWR_STATE_MAX_PWR_LVL(scmi_pwr_state, 1);
+	}
+	mbx_mem->msg_header = SCMI_MSG_CREATE(SCMI_PWR_DMN_PROTO_ID,
+			SCMI_PWR_STATE_SET_MSG, 0);
+	mbx_mem->len = SCMI_PWR_STATE_SET_MSG_LEN;
+	mbx_mem->flags = SCMI_FLAG_RESP_POLL;
+	// 这里需要修改,还不清楚什么操作.
+	// SCMI_PAYLOAD_ARG3(mbx_mem->payload, pwr_state_set_msg_flag,
+	// 					domain_id, scmi_pwr_state);
+	mbx_mem->payload[0] = pwr_state_set_msg_flag;
+	mbx_mem->payload[1] = domain_id;
+	mbx_mem->payload[2] = scmi_pwr_state;
+
+	// scmi_send_sync_command(ch); 调用了SCMI_MARK_CHANNEL_BUSY(mbx_mem->status);
+	// SCMI_MARK_CHANNEL_BUSY(mbx_mem->status);	// 该定义中已经对mbx_mem->status的状态进行了判断,因此,不需要
+	//进行assert操作,故修改如下.
+	(mbx_mem->status) &= ~(SCMI_CH_STATUS_FREE_MASK << SCMI_CH_STATUS_FREE_SHIFT);
+
+	// 以下都是不需要验证的边界。因为只是return ret,没有影响到空间状态
+	// SCMI_PAYLOAD_RET_VAL1(mbx_mem->payload, ret);	// 返回mbx_mem->payload[0]的值
+	// assert(mbx_mem->len == SCMI_PWR_STATE_SET_RESP_LEN);
+	// assert(token == SCMI_MSG_GET_TOKEN(mbx_mem->msg_header));
+
+	// scmi_put_channel(ch);
+	// return ret;
+}
 
 int main(int arg, char **args)
 {
