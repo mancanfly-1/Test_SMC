@@ -406,7 +406,9 @@ def global_ptr_to_int(ctx, name):
 
 
 def global_to_uf_dict(ctx, name, field_name=None):
+
     pointer = ctx.globals[name]
+
     return ctx['references'][pointer._ref._name]
 
 
@@ -420,10 +422,13 @@ def global_to_uf_field(ctx, name, *field_names):
         idx = [fn.keys()[0] for fn in types].index(field_name)
         types = types[idx][field_name]
         fields.append(idx)
+    print("-------")
+    print(global_to_uf_dict(ctx, name)[tuple(fields)])
     return global_to_uf_dict(ctx, name)[tuple(fields)]
 
 
 def global_field_element(ctx, name, field_name, *elems):
+
     if not isinstance(field_name, list):
         field_name = [field_name]
     return global_to_uf_field(ctx, name, *field_name)(i64(0), *elems)

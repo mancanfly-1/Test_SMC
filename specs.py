@@ -5,16 +5,16 @@ import datatype.datatypes as dt
 #specification
 
 
-def css_scp_off(old, psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL1,psci_power_state_ARM_PWR_LVL2,core_pos):
-    channel_id = dt.GET_SCMI_CHANNEL_ID(core_pos)
-    domain_id = dt.GET_SCMI_DOMAIN_ID(core_pos)
+def css_scp_off(old, psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL1,psci_power_state_ARM_PWR_LVL2,channel_id,domain_id):
+    # channel_id = dt.GET_SCMI_CHANNEL_ID(dt.plat_css_core_pos_to_scmi_dmn_id_map[core_pos])
+    # domain_id = dt.GET_SCMI_DOMAIN_ID(dt.plat_css_core_pos_to_scmi_dmn_id_map(core_pos))
     scmi_mbx_mem_id = old.scmi_channels[channel_id].scmi_mbx_mem_id
     scmi_pwr_state = 0
     scmi_power_state_off = 0
     # validation condition for change scmi_pwr_state
     cond = z3.And(
-        # core_pos must less than 15
-        core_pos <=15,
+        # core_pos must less than 8
+        core_pos < 8,
         # channel id must equal to zero
         channel_id == 0,
         # domain_id must equal to zero
@@ -77,37 +77,4 @@ def css_scp_off(old, psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL
     
     return cond, util.If(cond, util.If(cond1, new1, util.If(cond2, new2, util.If(cond3, new3, old))), old)
 
-
-# An example of channel initialization interface
-# old:original state space
-# chan_id:channel ID
-# flags:
-# uuid:UUID
-def chan_init(old, chan_id, flags, uuid):
-    # conditions parameter must satisfied
-    cond = z3.And(
-        # range of channel ID 
-        z3.And(chan_id >=0, chan_id < dt.NCHANID),
-        z3.And(uuid >= 0, uuid <dt.NUUID),
-    )
-    # get a deep clone of old TIPC state object and named 'new'
-    new = old.copy()
-    # another condition combine the limitation to parameter 'flags'
-    cond2 = z3.And(cond, (flags & dt.IPC_CHAN_FLAG_SERVER != 0))
-    # change property of TIPC state object 'new'
-    new.channels[chan_id].pathid = dt.NPATHID
-    new.channels[chan_id].uuid = uuid
-    new.channels[chan_id].port_id = dt.NPORT
-    new.channels[chan_id].aux_state = z3.BitVecVal(0,64)
-    new.channels[chan_id].ref_count = z3.BitVecVal(0,32) # before 0
-    new.channels[chan_id].ipc_msg_queue_id = dt.NMSG_QUEUE
-    new.channels[chan_id].peer = dt.NCHANID
-    new.channels[chan_id].state = dt.IPC_CHAN_STATE_ACCEPTING
-    new.channels[chan_id].flags = flags
-    # another TIPC state object and named 'new2'
-    new2 = new.copy()
-    # change property of TIPC state object 'new2'
-    new2.channels[chan_id].state = dt.IPC_CHAN_STATE_CONNECTING
-    # return conditon and respond state object
-    return cond, util.If(cond, util.If(cond2, new, new2), old)
 

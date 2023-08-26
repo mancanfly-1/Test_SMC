@@ -30,8 +30,8 @@
 #define SET_SCMI_DOMAIN_ID(n)		((n) & SCMI_DOMAIN_ID_MASK)
 
 #define PLAT_ARM_SCMI_CHANNEL_COUNT	1
-
-const uint32_t plat_css_core_pos_to_scmi_dmn_id_map[] = {
+#define PLAT_ARM_CLUSTER_COUNT 8
+const uint32_t plat_css_core_pos_to_scmi_dmn_id_map[8] = {
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x0)),
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x1)),
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x2)),
@@ -39,17 +39,17 @@ const uint32_t plat_css_core_pos_to_scmi_dmn_id_map[] = {
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x4)),
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x5)),
 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x6)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x7)),
-#if (PLAT_ARM_CLUSTER_COUNT > 8)
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x8)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x9)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xA)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xB)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xC)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xD)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xE)),
-	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xF)),
-#endif
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x7)), 
+// #if (PLAT_ARM_CLUSTER_COUNT > 8)
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x8)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x9)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xA)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xB)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xC)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xD)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xE)),
+// 	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xF)),
+// #endif
 };
 
 
@@ -301,11 +301,11 @@ int set_pwr_state_off(uint32_t scmi_pwr_state, unsigned int core_pos)
 	return 0; 
 }
 
-int css_scp_off(plat_local_state_t psci_power_state_ARM_PWR_LVL0, plat_local_state_t psci_power_state_ARM_PWR_LVL1,plat_local_state_t psci_power_state_ARM_PWR_LVL2,uint32_t core_pos)
+int css_scp_off(plat_local_state_t psci_power_state_ARM_PWR_LVL0, plat_local_state_t psci_power_state_ARM_PWR_LVL1,plat_local_state_t psci_power_state_ARM_PWR_LVL2,uint32_t channel_id, uint32_t domain_id)
 {
 	uint32_t scmi_pwr_state = 0;
-	unsigned int channel_id;
-	unsigned int domain_id;
+	// unsigned int channel_id;
+	// unsigned int domain_id;
 	uint32_t pwr_state_set_msg_flag = SCMI_PWR_STATE_SET_FLAG_ASYNC;
 
 	// 与下面的for语句进行呼应
@@ -315,12 +315,12 @@ int css_scp_off(plat_local_state_t psci_power_state_ARM_PWR_LVL0, plat_local_sta
 		return -1;
 	}
 
-	if(core_pos >=16)
-	{
-		return -1;
-	}
-	channel_id = get_scmi_channel_id(core_pos);
-	domain_id = get_scmi_domain_id(core_pos);
+	// if(core_pos >7)
+	// {
+	// 	return -1;
+	// }
+	// channel_id = get_scmi_channel_id(core_pos);
+	// domain_id = get_scmi_domain_id(core_pos);
 	if(channel_id !=0 || domain_id != 0)
 	{
 		return -1;
@@ -386,7 +386,7 @@ int css_scp_off(plat_local_state_t psci_power_state_ARM_PWR_LVL0, plat_local_sta
 	// SCMI_MARK_CHANNEL_BUSY(mbx_mem->status);	// 该定义中已经对mbx_mem->status的状态进行了判断,因此,不需要
 	//进行assert操作,故修改如下.
 	(mbx_mem->status) &= ~(SCMI_CH_STATUS_FREE_MASK << SCMI_CH_STATUS_FREE_SHIFT);
-
+	return 0;
 	// 以下都是不需要验证的边界。因为只是return ret,没有影响到空间状态
 	// SCMI_PAYLOAD_RET_VAL1(mbx_mem->payload, ret);	// 返回mbx_mem->payload[0]的值
 	// assert(mbx_mem->len == SCMI_PWR_STATE_SET_RESP_LEN);

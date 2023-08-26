@@ -7,9 +7,12 @@ uint32_t = z3.BitVecSort(32)
 uint16_t = z3.BitVecSort(16)
 uint8_t = z3.BitVecSort(8)
 
-SCMI_DOMAIN_ID_MASK = z3.BitVecVal(0xFFFF, uint32_t)
-SCMI_CHANNEL_ID_MASK = z3.BitVecVal(0xFFFF, uint32_t)
-SCMI_CHANNEL_ID_SHIFT = z3.BitVecVal(16, uint32_t)
+int32_t = z3.BitVecSort(32)
+
+
+SCMI_DOMAIN_ID_MASK = 0xFFFF
+SCMI_CHANNEL_ID_MASK = 0xFFFF
+SCMI_CHANNEL_ID_SHIFT = 16
 
 # Local power state for power domains in different state. 
 ARM_LOCAL_STATE_RUN = z3.BitVecVal(0, uint32_t)
@@ -23,7 +26,7 @@ ARM_PWR_LVL1 = z3.BitVecVal(1, uint32_t)
 ARM_PWR_LVL2 = z3.BitVecVal(2, uint32_t)
 
 PLAT_ARM_SCMI_CHANNEL_COUNT= 1
-PLAT_ARM_SCMI_MAILBOX_COUNT = 16
+PLAT_ARM_SCMI_MAILBOX_COUNT = z3.BitVecVal(16, uint32_t)
 PLAT_ARM_CLUSTER_COUNT = 8
 
 SCMI_PWR_STATE_SET_FLAG_SYNC = z3.BitVecVal(0, uint32_t)
@@ -140,6 +143,6 @@ def GET_SCMI_DOMAIN_ID(n):
     return ((n) & SCMI_DOMAIN_ID_MASK)
 
 def SCMI_MSG_CREATE(_protocol, _msg_id, _token):
-    ((((_protocol) & SCMI_MSG_PROTO_ID_MASK) << SCMI_MSG_PROTO_ID_SHIFT) |
+    return ((((_protocol) & SCMI_MSG_PROTO_ID_MASK) << SCMI_MSG_PROTO_ID_SHIFT) |
     (((_msg_id) & SCMI_MSG_ID_MASK) << SCMI_MSG_ID_SHIFT) |	
     (((_token) & SCMI_MSG_TOKEN_MASK) << SCMI_MSG_TOKEN_SHIFT))

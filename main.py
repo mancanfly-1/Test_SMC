@@ -79,7 +79,7 @@ class DetailTest(BaseTest):
 		# init LLVM IR context. 
         self.ctx = newctx()
 		#define counter machine state of ourself
-        self.state = dt.IPCState()
+        self.state = dt.SCMState()
 		# instance z3 solver.
         self.solver = Solver()
         self.solver.set(AUTO_CONFIG=False)
@@ -112,14 +112,13 @@ class DetailTest(BaseTest):
         psci_power_state_ARM_PWR_LVL0 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL0',dt.uint8_t)
         psci_power_state_ARM_PWR_LVL1 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL1',dt.uint8_t)
         psci_power_state_ARM_PWR_LVL2 = util.FreshBitVec('psci_power_state_ARM_PWR_LVL2',dt.uint8_t)
-        core_pos = util.FreshBitVec('core_pos',dt.uint32_t)
-        uuid =util.FreshBitVec('uuid',dt.uint64_t)
-        args = (psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL1, psci_power_state_ARM_PWR_LVL2,core_pos)
+        channel_id = util.FreshBitVec('domain_id',dt.uint32_t)
+        domain_id = util.FreshBitVec('domain_id',dt.uint32_t)
+        args = (psci_power_state_ARM_PWR_LVL0, psci_power_state_ARM_PWR_LVL1, psci_power_state_ARM_PWR_LVL2,channel_id, domain_id)
         self._general_test('css_scp_off', *args)
 
 if __name__ == "__main__":
-	#t = child()
-	#print t['a'][1]
+
 	unittest.main()
 
 

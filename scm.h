@@ -31,8 +31,8 @@ typedef uint8_t plat_local_state_t;
 #define ARM_PWR_LVL1				U(1)
 #define ARM_PWR_LVL2				U(2)
 
-#define SCMI_PWR_STATE_SET_FLAG_SYNC	0
-#define SCMI_PWR_STATE_SET_FLAG_ASYNC	1
+#define SCMI_PWR_STATE_SET_FLAG_SYNC	U(0)
+#define SCMI_PWR_STATE_SET_FLAG_ASYNC	U(1)
 
 /* SCMI Protocol identifiers */
 #define SCMI_PWR_DMN_PROTO_ID			0x11
@@ -210,7 +210,7 @@ typedef struct mailbox_mem {
 	uint32_t flags;
 	volatile uint32_t len;
 	volatile uint32_t msg_header;
-	uint32_t payload[];
+	uint32_t payload[3];
 } mailbox_mem_t;
 
 /*
@@ -218,7 +218,7 @@ typedef struct mailbox_mem {
  */
 typedef struct scmi_channel {
 	/* SCMI mailbox memory */
-	uint32_t scmi_mbx_mem_id;
+	uint64_t scmi_mbx_mem_id;
 	/* The door bell register address */
 	uint64_t db_reg_addr;
 	/* The bit mask that need to be preserved when ringing doorbell */
